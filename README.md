@@ -6,7 +6,7 @@ The framework combines traffic sequence modeling (BERT/Transformer-based mimicry
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 Sidewinder/
@@ -87,7 +87,7 @@ Sidewinder/
 ```
 
 
-## 🛠️ Key Components & Workflow
+## Key Components & Workflow
 
 ### 1. Traffic Mimicry (`trafficMimic/`)
 Trains sequence-based language representations (BERT/Transformer architectures) on benign network packet payloads and sequences. These models capture high-dimensional network protocol syntax to generate realistic obfuscated network traffic.
@@ -107,7 +107,7 @@ Generates evasion traffic using various attack models against target Gym environ
 
 ---
 
-## 🚀 Execution Guide
+## Execution Guide
 
 Make all shell scripts executable before running the pipeline:
 
