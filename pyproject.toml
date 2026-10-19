@@ -1,0 +1,37 @@
+[project]
+name = "pandora"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "joblib>=1.5.3",
+    "pyyaml>=6.0.3",
+    "scikit-learn>=1.9.0",
+    "tqdm>=4.68.2",
+    "xgboost>=3.2.0",
+    "torch",
+    "causal-conv1d>=1.2.0",
+    "mamba-ssm",
+    "scapy>=2.7.0",
+    "pandas>=3.0.3",
+    "matplotlib>=3.11.0",
+    "seaborn>=0.13.2",
+    "fastdtw>=0.3.4",
+    "gym>=0.26.2",
+    "stable-baselines3[extra]>=2.9.0",
+]
+
+# Tell uv to grab the CUDA 12.1 build of PyTorch (change cu121 to cu118 if needed)
+[tool.uv.sources]
+torch = { index = "pytorch" }
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
+
+# Tell uv that these packages require torch to be present during the build phase
+[tool.uv.extra-build-dependencies]
+mamba-ssm = ["torch","numpy"]
+causal-conv1d = ["torch","numpy"]

@@ -1,0 +1,48 @@
+# my_attacker/src/advGenerate/config/sac.yaml
+
+trainer:
+  # Using absolute paths to prevent "file not found" errors
+  train_data_pth: "/usr/src/Pandora/my_attacker/src/cic2023_dos_tcp_flood.pkl"
+  test_data_pth: "/usr/src/Pandora/my_attacker/src/cic2023_dos_tcp_flood.pkl"
+  timevocab_pth: "/usr/src/Pandora/my_attacker/src/timevocab_56.pkl"
+  sizevocab_pth: "/usr/src/Pandora/my_attacker/src/sizevocab_1606.pkl"
+  device: 0
+  episodes: 3000
+  test_episodes: 399
+  batch_size: 32
+  buffer_size: 100000   
+  minimal_size: 256
+  target_entropy: -5
+  
+  # Changed save paths to a dedicated pandora folder
+  model_save_pth: ./advGenerate/checkpoints/dl/probabilistic/vib/
+  target_model_pth: "/media/ahmad/Work/Experiments/Pandora/kitsune_saved_model.pkl"
+  fig_save_pth: null
+  stop_threshold: 0.95
+  max_stop_step: 10
+  env_name: Pandora
+  figure_path: null
+  
+  # Save the adversarial traffic it generates!
+  flow_save_pth: ./advGenerate/checkpoints/dl/probabilistic/vib/adv_traffic.pkl
+  
+  # Absolute path to your custom trained BERT
+  bert_pth: null
+
+
+env:
+  bad_ip: "10.10.10.24"
+
+model:
+  timevocab_size: 56 
+  sizevocab_size: 1606 
+  embedding_dim: 128
+  seq_len: 128
+  actor_lr: 0.0001
+  critic_lr: 0.0001
+  alpha_lr: 0.0005
+  target_entropy: -5
+  tau: 0.005
+  gamma: 0.95
+  state_dim: 256        
+  hidden_dim: 128     

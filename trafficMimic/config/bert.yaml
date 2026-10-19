@@ -1,0 +1,32 @@
+trainer:
+  train_data_pth: "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/iot_dataset.pkl"
+  test_data_pth: "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/iot_dataset.pkl"
+
+  # Comment this out so you don't load the old MAWI weights onto your custom IoT vocab!
+  # load_save_pth: ../pretrained_models/56_bi_attn_linear/BERTLM_model_mawi202306_sizebest.pth
+  # load_save_pth: null
+  timevocab_pth: "/usr/src/Pandora/my_attacker/src/timevocab_56.pkl"
+  sizevocab_pth: "/usr/src/Pandora/my_attacker/src/sizevocab_1606.pkl"
+  
+  # Give your new model a custom name so you don't overwrite the original files
+  model_save_pth: ../pretrained_models/pandora_iot_bert.pth
+  
+  device: 0
+  batch_size: 16
+  epochs: 50       # <-- Changed to 50 from 300
+  log_frequency: 10
+  optimizer:
+    type: 'AdamW'
+    lr: 0.001
+    beta: (0.9, 0.999)
+    weight_decay: 0.01
+    warmup_steps: 10000
+
+model:
+  seq_len: 256 
+  f_features: 2
+  hidden: 128
+  d_ff: 512
+  n_layers: 6
+  attn_heads: 8
+  dropout: 0.1
