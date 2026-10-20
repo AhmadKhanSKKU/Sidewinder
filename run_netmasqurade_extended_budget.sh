@@ -24,23 +24,23 @@ echo "=========================================================="
 # Define target failed combinations (dataset:defense:attack)
 TARGETS=(
     # --- CIC-2023 Failures ---
-    # "cic2023:cnn:web"
-    # "cic2023:cnn:ddos"
+    "cic2023:cnn:web"
+    "cic2023:cnn:ddos"
     "cic2023:cnn:spoofing"
     "cic2023:transformer:spoofing"
     "cic2023:vib:spoofing"
 
     # --- CIC-2025 Failures ---
-    # "cic2025:dl:ddos"
+    "cic2025:dl:ddos"
     "cic2025:pandora:ddos"
-    # "cic2025:vib:ddos"
-    # "cic2025:cnn:dos"
-    # "cic2025:dl:dos"
-    # "cic2025:vib:dos"
-    # "cic2025:transformer:dos"
+    "cic2025:vib:ddos"
+    "cic2025:cnn:dos"
+    "cic2025:dl:dos"
+    "cic2025:vib:dos"
+    "cic2025:transformer:dos"
 
     # --- TTDF Failures ---
-    # "TTDF:dl:dos"
+    "TTDF:dl:dos"
     "TTDF:transformer:dos"
 )
 

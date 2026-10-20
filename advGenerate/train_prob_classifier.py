@@ -10,13 +10,9 @@ from sklearn.metrics import classification_report, accuracy_score
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 
-# ==============================================================================
 # 1. CONFIGURATION
-# ==============================================================================
-MALICIOUS_PATH = (
-    "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/cic2023_dos_tcp_flood.pkl"
-)
-BENIGN_PATH = "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/cic2023_benign.pkl"
+MALICIOUS_PATH = "malicious.pkl"
+BENIGN_PATH = "benign.pkl"
 MODEL_SAVE_PATH = "prob_classifier_ids.pkl"
 
 BATCH_SIZE = 512
@@ -26,9 +22,7 @@ EPOCHS = 15
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
-# ==============================================================================
 # 2. PROBABILISTIC CLASSIFIER ARCHITECTURE (VIB)
-# ==============================================================================
 class ProbabilisticClassifier(nn.Module):
     def __init__(self, input_dim: int = 256, latent_dim: int = 64):
         super(ProbabilisticClassifier, self).__init__()
@@ -73,9 +67,7 @@ class ProbabilisticClassifier(nn.Module):
         return logits, mu, logvar
 
 
-# ==============================================================================
 # 3. DATA PIPELINE
-# ==============================================================================
 def extract_features(filepath, label_val):
     print(f"[*] Loading data from {filepath}...")
     with open(filepath, "rb") as f:
@@ -126,9 +118,7 @@ test_loader = DataLoader(
     shuffle=False,
 )
 
-# ==============================================================================
 # 4. TRAINING THE PROBABILISTIC CLASSIFIER
-# ==============================================================================
 model = ProbabilisticClassifier(INPUT_DIM, LATENT_DIM).to(DEVICE)
 optimizer = torch.optim.AdamW(model.parameters(), lr=0.001)
 
@@ -163,9 +153,7 @@ for epoch in range(EPOCHS):
         f"    Epoch {epoch + 1:02d}/{EPOCHS} | Train Loss: {total_loss/len(train_loader):.4f}"
     )
 
-# ==============================================================================
 # 5. VALIDATION PHASE
-# ==============================================================================
 print("\n[*] Starting Validation on Unseen Test Data...")
 model.eval()
 

@@ -24,9 +24,8 @@ from advGenerate.environments.transformer_environment_eval import Transformer_ID
 from advGenerate.environments.cnn_environment_eval import CNN_IDS_Evaluator
 from advGenerate.environments.pandora_seq_environment_eval import PandoraSeq_IDS_Evaluator
 
-# ==========================================
+
 # 1. Amoeba State Encoder
-# ==========================================
 class StateEncoder(nn.Module):
     def __init__(self, device, state_num=2, num_layers=2, hidden_size=256):
         super(StateEncoder, self).__init__()
@@ -37,11 +36,13 @@ class StateEncoder(nn.Module):
             input_size=state_num,
             hidden_size=hidden_size,
             num_layers=num_layers,
-            batch_first=True
+            batch_first=True,
         )
 
     def init_hidden(self, batch_size):
-        return torch.zeros(self.num_layers, batch_size, self.hidden_size).to(self.device)
+        return torch.zeros(self.num_layers, batch_size, self.hidden_size).to(
+            self.device
+        )
 
     def step(self, X, h=None):
         batch_size, seq_len, _ = X.size()
@@ -50,9 +51,8 @@ class StateEncoder(nn.Module):
         encoded, h = self.encoder(X, h)
         return encoded.squeeze(dim=1), h
 
-# ==========================================
+
 # 2. IDS Discriminator Wrapper
-# ==========================================
 class CustomIDSDCRWrapper(nn.Module):
     """Wraps dynamically loaded IDS evaluators to act as Amoeba's discriminator."""
     def __init__(self, evaluator):
@@ -62,18 +62,16 @@ class CustomIDSDCRWrapper(nn.Module):
     def forward(self, generated_flow):
         flow_np = generated_flow.detach().cpu().numpy()[0]
         sizes = [abs(f[0]) for f in flow_np]
-        
+
         timestamps = [abs(f[1]) for f in flow_np]
         ipds = [timestamps[0]] + [timestamps[i] - timestamps[i-1] for i in range(1, len(timestamps))]
-        
+
         _, _, pred_class = self.evaluator.predict(ipds, sizes, max_seq_len=128)
-        
+
         score = 1.0 if pred_class != 0 else 0.0
         return torch.tensor([score], dtype=torch.float32)
 
-# ==========================================
 # 3. Amoeba Gym Environment
-# ==========================================
 class AmoebaCustomEnv(gym.Env):
     def __init__(self, discriminator, state_encoder, data, device):
         super().__init__()
@@ -81,14 +79,14 @@ class AmoebaCustomEnv(gym.Env):
         self.state_encoder = state_encoder
         self.data = data
         self.device = device
-        
+
         self.data_penalty = 1.0
         self.time_penalty = 2.0
         self.truncate_penalty = 0.05
-        
+
         self.action_space = spaces.Box(low=np.array([0, 0]), high=np.array([0.5, 0.1]), shape=(2,))
         self.observation_space = spaces.Box(-1, 1, shape=(256 * 2 + 1 + 2,))
-        
+
         self.reset_virtual_flow_states()
 
     def reset_virtual_flow_states(self):
@@ -107,7 +105,7 @@ class AmoebaCustomEnv(gym.Env):
                 ipds, sizes = list(item.get("ipds", [])), list(item.get("sizes", []))
             else:
                 continue
-                
+
             if len(ipds) > 5:
                 timestamps = np.cumsum(ipds)
                 flow = np.column_stack((sizes, timestamps))
@@ -118,19 +116,19 @@ class AmoebaCustomEnv(gym.Env):
         self.pkt_counter = self.step_c = 0
         self.reset_virtual_flow_states()
         self.original_flow = self.get_sample()
-        
+
         init_ob = self.original_flow[self.pkt_counter].to(self.device)
         self.original_pkts.append(init_ob)
         self.remaining_bytes = init_ob[0].item()
         self.last_t = init_ob[1].item()
-        
+
         return self.get_encoded_states(), {}
 
     def get_encoded_states(self):
         with torch.no_grad():
             enc_orig, self.last_original_hidden_state = self.state_encoder.step(
                 self.original_pkts[-1].view(1, 1, 2), self.last_original_hidden_state)
-            
+
             if len(self.generated_pkts) == 0:
                 enc_adv = torch.zeros_like(enc_orig, device=self.device)
             else:
@@ -141,22 +139,22 @@ class AmoebaCustomEnv(gym.Env):
         enc_adv = enc_adv.detach().cpu().numpy().reshape((-1,))
         next_pkt = self.original_pkts[-1].detach().cpu().numpy()
         binary_signal = np.ones((1,)) if self.truncate_num != 0 else np.zeros((1,))
-        
+
         return np.concatenate([enc_orig, enc_adv, binary_signal, next_pkt], axis=0)
 
     def step(self, action):
         self.step_c += 1
         terminated = False
-        
+
         pkt_size = self.remaining_bytes * (1.0 + action[0])
         t = self.last_t + action[1]
-        
+
         added_delay = t - self.last_t
         pkt_diff = abs(pkt_size - self.remaining_bytes)
-        
+
         action_tensor = torch.tensor([pkt_size, t], device=self.device, dtype=torch.float32)
         self.generated_pkts.append(action_tensor)
-        
+
         # Reconstruct complete flow by appending remaining unperturbed original packets
         if self.pkt_counter + 1 < len(self.original_flow):
             rem_flow = self.original_flow[self.pkt_counter + 1:].clone()
@@ -170,9 +168,9 @@ class AmoebaCustomEnv(gym.Env):
         with torch.no_grad():
             generated_flow = full_flow.view(1, -1, 2)
             clf_result = self.discriminator(generated_flow).item()
-        
+
         reward = -clf_result - (self.data_penalty * pkt_diff * 0.001) - (self.time_penalty * added_delay)
-        
+
         next_pkt = torch.zeros(2)
         self.pkt_counter += 1
         if self.pkt_counter < len(self.original_flow) and self.step_c < 60:
@@ -181,15 +179,13 @@ class AmoebaCustomEnv(gym.Env):
             self.last_t = next_pkt[1].item()
         else:
             terminated = True
-            
+
         next_pkt = next_pkt.to(self.device)
         self.original_pkts.append(next_pkt)
-        
+
         return self.get_encoded_states(), reward, terminated, False, {}
 
-# ==========================================
 # 4. Helper Evaluator Loader
-# ==========================================
 def get_evaluator(defense: str, world_type: str, dataset: str, attack: str, feedback_mode: str = "hard_labeled"):
     num_classes = 3 if world_type == "open_world" else 2
 
@@ -226,9 +222,7 @@ def get_evaluator(defense: str, world_type: str, dataset: str, attack: str, feed
 
     return None
 
-# ==========================================
 # 5. Evaluation Execution
-# ==========================================
 def run_amoeba_eval(data, evaluator, model, state_encoder, device, max_steps):
     ter_count = 0
     acr_count = 0
@@ -353,9 +347,7 @@ def run_amoeba_eval(data, evaluator, model, state_encoder, device, max_steps):
 
     return ter, acr, mal_rate, avg_steps
 
-# ==========================================
 # 6. Main Pipeline
-# ==========================================
 def main():
     parser = argparse.ArgumentParser(description="Amoeba Baseline Evaluation & Training Pipeline")
     parser.add_argument("--world_type", type=str, default="closed_world")

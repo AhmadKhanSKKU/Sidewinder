@@ -1,5 +1,5 @@
 import pickle
-with open("/media/ahmad/Work/Experiments/Pandora/NetMasquerade-main/src/pandora_ddos_ackFrag_experiment.pkl", "rb") as f:
+with open("file.pkl", "rb") as f:
     data = pickle.load(f)
 
 max_ipd = 0

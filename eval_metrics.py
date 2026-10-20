@@ -29,9 +29,7 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-# ==========================================
 # EDIT & PERTURBATION METRIC HELPERS
-# ==========================================
 
 
 def compute_levenshtein_edit_distance(
@@ -134,9 +132,7 @@ def compute_pointwise_edit_stats(
     }
 
 
-# ==========================================
 # EVALUATION PIPELINE
-# ==========================================
 
 
 class RobustnessMetricEvaluator:

@@ -2,10 +2,10 @@
 
 trainer:
   # Using absolute paths to prevent "file not found" errors
-  train_data_pth: "/usr/src/Pandora/my_attacker/src/cic2023_dos_tcp_flood.pkl"
-  test_data_pth: "/usr/src/Pandora/my_attacker/src/cic2023_dos_tcp_flood.pkl"
-  timevocab_pth: "/usr/src/Pandora/my_attacker/src/timevocab_56.pkl"
-  sizevocab_pth: "/usr/src/Pandora/my_attacker/src/sizevocab_1606.pkl"
+  train_data_pth: "train.pkl"
+  test_data_pth: "test.pkl"
+  timevocab_pth: "time.pkl"
+  sizevocab_pth: "size.pkl"
   device: 0
   episodes: 3000
   test_episodes: 399
@@ -16,7 +16,7 @@ trainer:
   
   # Changed save paths to a dedicated pandora folder
   model_save_pth: ./advGenerate/checkpoints/dl/probabilistic/vib/
-  target_model_pth: "/media/ahmad/Work/Experiments/Pandora/kitsune_saved_model.pkl"
+  target_model_pth: "/model.pkl"
   fig_save_pth: null
   stop_threshold: 0.95
   max_stop_step: 10
@@ -24,7 +24,7 @@ trainer:
   figure_path: null
   
   # Save the adversarial traffic it generates!
-  flow_save_pth: ./advGenerate/checkpoints/dl/probabilistic/vib/adv_traffic.pkl
+  flow_save_pth: save.pkl
   
   # Absolute path to your custom trained BERT
   bert_pth: null

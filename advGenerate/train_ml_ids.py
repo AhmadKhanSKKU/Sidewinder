@@ -83,9 +83,7 @@ def train_baselines(malicious_pkl: str, benign_pkl: str, output_dir: str):
     joblib.dump(scaler, os.path.join(output_dir, "ml_scaler.pkl"))
     print("[+] Feature Scaler saved successfully.")
 
-    # ==========================================
     # MODEL 1: RANDOM FOREST
-    # ==========================================
     print("\n[*] Training RandomForest Classifier...")
     rf = RandomForestClassifier(
         n_estimators=100, max_depth=15, random_state=42, n_jobs=-1
@@ -95,9 +93,7 @@ def train_baselines(malicious_pkl: str, benign_pkl: str, output_dir: str):
     print(f"[+] RF Accuracy: {accuracy_score(y_test, rf_preds):.4f}")
     joblib.dump(rf, os.path.join(output_dir, "random_forest_ids.pkl"))
 
-    # ==========================================
     # MODEL 2: SUPPORT VECTOR MACHINE (SVM)
-    # ==========================================
     print("\n[*] Training Support Vector Machine (SVM)... (Calibrating Probabilities)")
     SVM_MAX_SAMPLES = 15000
     if len(X_train_scaled) > SVM_MAX_SAMPLES:
@@ -118,9 +114,7 @@ def train_baselines(malicious_pkl: str, benign_pkl: str, output_dir: str):
     print(f"[+] SVM Accuracy: {accuracy_score(y_test, svm_preds):.4f}")
     joblib.dump(svm, os.path.join(output_dir, "svm_ids.pkl"))
 
-    # ==========================================
     # MODEL 3: XGBOOST
-    # ==========================================
     print("\n[*] Training Extreme Gradient Boosting (XGBoost)...")
     xgb = XGBClassifier(
         n_estimators=100,

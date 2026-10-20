@@ -17,9 +17,7 @@ from sklearn.metrics import (
 )
 
 
-# ==========================================
 # REPORT HELPER
-# ==========================================
 def append_markdown_report(
     report_md_path: str,
     dataset_name: str,
@@ -67,9 +65,7 @@ def append_markdown_report(
         f.write("---\n\n")
 
 
-# ==========================================
 # PURE CNN + ANN ARCHITECTURE
-# ==========================================
 class CNN_ANN_IDS(nn.Module):
     def __init__(self, in_channels: int = 2, num_classes: int = 2):
         super(CNN_ANN_IDS, self).__init__()
@@ -103,9 +99,7 @@ class CNN_ANN_IDS(nn.Module):
         return logits
 
 
-# ==========================================
 # DATA LOADING HELPER
-# ==========================================
 def load_and_flatten_data(pkl_path: str, assigned_label: int, max_seq_len: int = 128):
     if not os.path.exists(pkl_path):
         return np.empty((0, max_seq_len * 2), dtype=np.float32), np.empty(
@@ -134,9 +128,7 @@ def load_and_flatten_data(pkl_path: str, assigned_label: int, max_seq_len: int =
     return np.array(X, dtype=np.float32), np.array(y, dtype=np.int64)
 
 
-# ==========================================
 # TRAINING ENGINE
-# ==========================================
 def train_cnn(
     malicious_pkl: str,
     benign_pkl: str,

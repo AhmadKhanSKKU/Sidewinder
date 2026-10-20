@@ -162,7 +162,7 @@ def feature_extract(flow_list):
         timestamp: list of list [[flow1.packet1.timestamp, flow1.packet2.timestamp], [flow2.packet1.timestamp, flow2.packet2.timestamp], ...]
         size: list of list [[flow1.packet1.size, flow1.packet2.size], [flow2.packet1.size, flow2.packet2.size], ...]
     '''
-    # timestamp, size: list of list [[flow1.packet1, flow1.packet2], [flow2.packet1, flow2.packet2], ...]
+
     timestamp = [flow.timestp for flow in flow_list if len(flow.timestp) > 1] # del 1-packet flow
     for stp in timestamp:
         for i in range(len(stp) - 1, 0, -1):
@@ -257,8 +257,3 @@ def data_transfer_save(data, label):
 
 if __name__ == '__main__':
     pass 
-    
-    
-    
-
-    

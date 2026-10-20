@@ -17,7 +17,6 @@ Sidewinder/
 │   │   ├── cnn_environment_eval.py
 │   │   ├── dl_environment_eval.py
 │   │   ├── environment.py         # Base environment abstract class
-│   │   ├── pandora_fast.py
 │   │   ├── pandora_seq_environment_eval.py
 │   │   ├── prob_environment_eval.py
 │   │   ├── transformer_environment_eval.py

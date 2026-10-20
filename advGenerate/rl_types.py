@@ -102,9 +102,7 @@ class RLArgs:
     model: RLModelConfig
 
 
-# ==========================================
 # STRICT TYPING FOR BERT CONFIGURATION
-# ==========================================
 
 
 @dataclass

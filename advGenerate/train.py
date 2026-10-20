@@ -538,7 +538,7 @@ if __name__ == "__main__":
             f"models/{args.world_type}/{args.dataset}/dl/{args.attack}_ids.pth"
         )
         evaluator = DL_IDS_Evaluator(
-            models_dir=ids_model_path, mode=args.feedback_mode, threshold=0.3
+            models_dir=ids_model_path, mode=args.feedback_mode, threshold=0.5
         )
 
     elif args.defense == "vib":

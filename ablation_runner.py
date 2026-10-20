@@ -24,9 +24,7 @@ from advGenerate.environments.pandora_seq_environment_eval import PandoraSeq_IDS
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 
-# ==========================================
 # Helpers for Safe State Tokenization
-# ==========================================
 def extract_vocab_list(vocab_obj) -> List[float]:
     """Safely extracts numerical vocabulary bin values, gracefully defaulting special tokens (e.g. '[pad]') to 0.0."""
     raw_list = []
@@ -76,9 +74,7 @@ def get_nearest_token_idx(val: float, vals_array: np.ndarray) -> int:
     return int(np.argmin(np.abs(vals_array - val)))
 
 
-# ==========================================
 # Dataset Loader
-# ==========================================
 class SimpleFlowDataset(Dataset):
     def __init__(self, data_path: str, max_len: int = 128):
         with open(data_path, "rb") as f:
@@ -108,12 +104,10 @@ class SimpleFlowDataset(Dataset):
         }
 
 
-# ==========================================
 # Evaluator Factory
-# ==========================================
 def load_evaluator(defense: str, world_type: str, dataset: str, attack: str, feedback_mode: str):
     num_classes = 3 if world_type == "open_world" else 2
-    
+
     if defense == "dl":
         path = f"models/{world_type}/{dataset}/dl/{attack}_ids.pth"
         return DL_IDS_Evaluator(models_dir=path, mode=feedback_mode, threshold=0.3)
@@ -133,9 +127,7 @@ def load_evaluator(defense: str, world_type: str, dataset: str, attack: str, fee
         raise ValueError(f"Unsupported defense architecture: {defense}")
 
 
-# ==========================================
 # Experiment 2: BERT Predictions at Random Places (No RL)
-# ==========================================
 def run_exp2_bert_random(env: IntelligentPaddingEnv, dataset: SimpleFlowDataset, max_steps: int = 10):
     ter_count, acr_count, mal_count = 0, 0, 0
     total_steps, total_evals = 0, 0
@@ -149,10 +141,10 @@ def run_exp2_bert_random(env: IntelligentPaddingEnv, dataset: SimpleFlowDataset,
 
         env.state = {k: v.clone().detach().to(env.device) for k, v in sample.items()}
         env.reset()
-        
+
         raw_ipds, raw_sizes = env._get_raw_traffic_dimensions()
         eval_res = env.evaluator.predict(raw_ipds, raw_sizes, max_seq_len=128)
-        
+
         if eval_res[2] == 0:
             continue
 
@@ -165,7 +157,7 @@ def run_exp2_bert_random(env: IntelligentPaddingEnv, dataset: SimpleFlowDataset,
             steps += 1
             rand_idx = random.randint(1, max(1, real_len - 1))
             action = torch.tensor(rand_idx, device=env.device)
-            
+
             _, _, done, info = env.step(action)
             last_pred = info.get("pred_class", 1)
 
@@ -182,9 +174,7 @@ def run_exp2_bert_random(env: IntelligentPaddingEnv, dataset: SimpleFlowDataset,
     return format_results(ter_count, acr_count, mal_count, total_evals, total_steps, mod_times)
 
 
-# ==========================================
 # Experiment 3: Continuous Amoeba-style Mamba RL Agent
-# ==========================================
 class ContinuousMambaAmoebaPolicy(nn.Module):
     """
     Continuous Mamba Actor-Critic for Amoeba RL (Experiment 3).
@@ -295,9 +285,7 @@ def run_exp3_amoeba(
 
     optimizer = torch.optim.Adam(agent.parameters(), lr=3e-4)
 
-    # ---------------------------------------------------------
     # Phase 1: RL Policy Training Loop
-    # ---------------------------------------------------------
     logging.info(f"[*] Training Amoeba Continuous Mamba Agent for {train_steps} steps...")
     agent.train()
 
@@ -374,9 +362,7 @@ def run_exp3_amoeba(
 
     logging.info("[+] Training Complete! Proceeding to Evaluation Pass...")
 
-    # ---------------------------------------------------------
     # Phase 2: Evaluation Pass
-    # ---------------------------------------------------------
     agent.eval()
     ter_count, acr_count, mal_count = 0, 0, 0
     total_steps, total_evals = 0, 0
@@ -435,9 +421,7 @@ def run_exp3_amoeba(
     return format_results(ter_count, acr_count, mal_count, total_evals, total_steps, mod_times)
 
 
-# ==========================================
 # Helpers & Reporter
-# ==========================================
 def format_results(ter_c, acr_c, mal_c, total, steps, times):
     if total == 0:
         return 0.0, 0.0, 0.0, 0.0, 0.0
@@ -464,9 +448,7 @@ def append_to_markdown(out_md: str, dataset: str, defense: str, attack: str, exp
         f.write("---\n\n")
 
 
-# ==========================================
 # Main CLI Entrypoint
-# ==========================================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Ablation Study Runner (Exp 2 & 3)")
     parser.add_argument("--exp_type", type=str, required=True, choices=["bert_only", "amoeba_rl"])

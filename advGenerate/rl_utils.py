@@ -49,22 +49,7 @@ class ReplayBuffer:
     ) -> Tuple[StateDict, List[int], List[float], StateDict, List[bool]]:
         transitions = random.sample(self.buffer, batch_size)
         state_list, action, reward, next_state_list, done = zip(*transitions)
-        # if isinstance(state[0], dict):
-        #     keys = state[0].keys()
 
-        #     state = {
-        #         key: torch.cat([s[key].unsqueeze(0) for s in state], dim=0)
-        #         for key in keys
-        #     }
-
-        # if isinstance(next_state[0], dict):
-        #     keys = next_state[0].keys()
-        #     next_state = {
-        #         key: torch.cat([s[key].unsqueeze(0) for s in next_state])
-        #         for key in keys
-        #     }
-
-        # return state, action, reward, next_state, done
         def _collate_states(states: Iterable[StateDict]) -> StateDict:
             first = list(states)[0]
             keys = first.keys()

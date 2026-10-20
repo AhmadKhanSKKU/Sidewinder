@@ -50,12 +50,10 @@ def create_ml_dataset(benign_pkl: str, attack_pkl: str, output_pkl: str) -> None
 
 if __name__ == "__main__":
     # 1. Generate these two paths using your build_real_vocab.py script!
-    BENIGN_INPUT = "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/sliding_window_benign.pkl"
-    ATTACK_INPUT = "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/sliding_window_attack_bruteforce_dictionary_ssh_ap.pkl"
+    BENIGN_INPUT = "/benign.pkl"
+    ATTACK_INPUT = "/attack.pkl"
 
     # 2. This will be the master file you hand to your ML models
-    OUTPUT_FILE = (
-        "/media/ahmad/Work/Experiments/Pandora/my_attacker/src/master_ids_dataset.pkl"
-    )
+    OUTPUT_FILE = "output.pkl"
 
     create_ml_dataset(BENIGN_INPUT, ATTACK_INPUT, OUTPUT_FILE)

@@ -6,12 +6,10 @@ FEEDBACK_MODE="hard_labeled"
 ARCH="mamba" # Options: mamba | lstm | gru | netmasquerade
 OUTPUT_FILE="mamba_cnn_dos.md"
 
-# DATASETS=("cic2025" "cic2023" "TTDF")
-# DEFENSES=("transformer" "cnn" "dl" "vib" "pandora")
-# ATTACKS=("spoofing" "web" "ddos" "dos")
-DATASETS=(  "cic2023")
-DEFENSES=( "cnn")
-ATTACKS=("dos")
+DATASETS=("cic2025" "cic2023" "TTDF")
+DEFENSES=("transformer" "cnn" "dl" "vib" "pandora")
+ATTACKS=("spoofing" "web" "ddos" "dos")
+
 # Initialize / Overwrite markdown summary file
 echo "# Multi-Dataset Evaluation Results (${ARCH^^})" > "$OUTPUT_FILE"
 echo "**World Type:** \`$WORLD_TYPE\` | **Feedback Mode:** \`$FEEDBACK_MODE\`" >> "$OUTPUT_FILE"
