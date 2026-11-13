@@ -66,8 +66,8 @@ class FlowDataset(Dataset):
         raw_size.extend(raw_padding)
 
         output = {
-            "flow_ipd": flow_ipd,
-            "flow_size": flow_size,
+            "flow_ipd": flow_ipd_random,
+            "flow_size": flow_size_random,
             "flow_ipd_label": flow_ipd_label,
             "flow_size_label": flow_size_label,
             "real_length": real_length,
