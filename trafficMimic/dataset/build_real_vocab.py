@@ -66,10 +66,8 @@ def process_pcap_to_flows(
     all_ipd_sequences: List[List[float]] = []
     all_size_sequences: List[List[int]] = []
 
-    MAX_PACKETS_PER_FLOW = 100
-    # STRIDE determines overlap. A stride of 10 shifts the window by 10 packets.
-    # For a 35,000 packet stream, a stride of 10 generates ~3,500 flows.
-    STRIDE = 1
+    MAX_PACKETS_PER_FLOW = 128
+    STRIDE = 128
 
     # Dynamic sorting and slicing loop
     for _, packets in flows.items():
