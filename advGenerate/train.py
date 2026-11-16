@@ -244,6 +244,7 @@ class AdversarialTrainer:
             )
             self.env.forbidden_indices[0] = True
             self.env.state["forbidden_indices"] = self.env.forbidden_indices.clone()
+            self.env.state["legal_action_mask"] = self.env.get_legal_action_mask()
             state: FlowState = self.env.state
 
             episode_reward = 0
@@ -348,9 +349,12 @@ class AdversarialTrainer:
 
         flow_modification_times: list[float] = []
 
-        eval_runs = min(len(self.test_dataset), self.rl_args.trainer.test_episodes)
+        target_episodes = self.rl_args.trainer.test_episodes
 
-        for idx in range(eval_runs):
+        for idx in range(len(self.test_dataset)):
+            if total_episodes >= target_episodes:
+                break
+
             state_data = self.test_dataset[idx]
 
             real_len = int(state_data["real_length"].item())
@@ -366,15 +370,24 @@ class AdversarialTrainer:
             )
             self.env.forbidden_indices[0] = True
             self.env.state["forbidden_indices"] = self.env.forbidden_indices.clone()
+            self.env.state["legal_action_mask"] = self.env.get_legal_action_mask()
 
             state = self.env.state
             raw_ipds, raw_sizes = self.env._get_raw_traffic_dimensions()
             eval_res = self.env.evaluator.predict(raw_ipds, raw_sizes, max_seq_len=128)
 
+            last_pred_class = (
+                eval_res[2] if len(eval_res) == 3 else (0 if eval_res[1] < 0.50 else 1)
+            )
+
+            # Skip sequences initially classified as Benign (Class 0) so all attacks
+            # evaluate on the exact same first 399 initially flagged non-benign sequences
+            if last_pred_class == 0:
+                continue
+
             self.env.baseline_score = eval_res[1]
             self.env.prev_score = eval_res[1]
             done = False
-            last_pred_class = eval_res[2] if len(eval_res) == 3 else 1
 
             start_flow_time = time.perf_counter()
 
@@ -494,7 +507,7 @@ if __name__ == "__main__":
         choices=["lstm", "mamba", "gru", "netmasquerade"],
     )
     parser.add_argument(
-        "--max_steps", type=int, default=3000, help="Number of training steps/episodes"
+        "--max_steps", type=int, default=1000, help="Number of training steps/episodes"
     )
     parser.add_argument(
         "--out_md", type=str, default=None, help="Path to markdown output file"
@@ -537,32 +550,24 @@ if __name__ == "__main__":
         ids_model_path = (
             f"models/{args.world_type}/{args.dataset}/dl/{args.attack}_ids.pth"
         )
-        evaluator = DL_IDS_Evaluator(
-            models_dir=ids_model_path, mode=args.feedback_mode, threshold=0.5
-        )
+        evaluator = DL_IDS_Evaluator(models_dir=ids_model_path, mode=args.feedback_mode)
 
     elif args.defense == "vib":
         ids_model_path = (
             f"models/{args.world_type}/{args.dataset}/vib/{args.attack}_vib.pth"
         )
-        num_classes = 3 if args.world_type == "open_world" else 2
         evaluator = VIB_IDS_Evaluator(
             models_dir=ids_model_path,
             mode=args.feedback_mode,
-            threshold=0.5,
-            num_classes=num_classes,
         )
 
     elif args.defense == "transformer":
         ids_model_path = (
             f"models/{args.world_type}/{args.dataset}/transformer/{args.attack}_ids.pth"
         )
-        num_classes = 3 if args.world_type == "open_world" else 2
         evaluator = Transformer_IDS_Evaluator(
             models_dir=ids_model_path,
             mode=args.feedback_mode,
-            threshold=0.5,
-            num_classes=num_classes,
         )
 
     elif args.defense == "cnn":
@@ -570,7 +575,7 @@ if __name__ == "__main__":
             f"models/{args.world_type}/{args.dataset}/cnn/{args.attack}_ids.pth"
         )
         evaluator = CNN_IDS_Evaluator(
-            models_dir=ids_model_path, mode=args.feedback_mode, threshold=0.5
+            models_dir=ids_model_path, mode=args.feedback_mode
         )
 
     elif args.defense == "pandora":
@@ -578,7 +583,7 @@ if __name__ == "__main__":
             f"models/{args.world_type}/{args.dataset}/pandora_seq/{args.attack}"
         )
         evaluator = PandoraSeq_IDS_Evaluator(
-            models_dir=ids_model_path, mode=args.feedback_mode, threshold=0.5
+            models_dir=ids_model_path, mode=args.feedback_mode
         )
 
     else:

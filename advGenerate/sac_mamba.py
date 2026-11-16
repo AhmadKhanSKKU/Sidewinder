@@ -21,7 +21,7 @@ class MambaPolicyNet(nn.Module):
     ) -> None:
         super(MambaPolicyNet, self).__init__()
         self.seq_len = seq_len
-        self.action_dim = seq_len
+        self.action_dim = seq_len * 2
 
         self.ipd_embedding = nn.Embedding(timevocab_size, embedding_dim)
         self.size_embedding = nn.Embedding(sizevocab_size, embedding_dim)
@@ -61,33 +61,63 @@ class MambaPolicyNet(nn.Module):
         mamba_out_flat = mamba_out.contiguous().view(mamba_out.size(0), -1)
         logits = self.fc_logits(mamba_out_flat)
 
+        # batch_size = logits.size(0)
+        # device = logits.device
+
+        # # --- MASK 1: PADDING TOKENS ---
+        # # Prevent modifying any indices beyond the real packet length
+        # seq_indices = (
+        #     torch.arange(self.seq_len, device=device)
+        #     .unsqueeze(0)
+        #     .expand(batch_size, -1)
+        # )
+        # real_len_broadcast = real_length.view(-1, 1)
+        # action_mask = seq_indices < real_len_broadcast
+        # masked_logits = logits.masked_fill(~action_mask, -1e9)
+
+        # # --- MASK 2: ALREADY MODIFIED / FORBIDDEN TOKENS ---
+        # if "forbidden_indices" in state:
+        #     forbidden_mask = state["forbidden_indices"].bool()
+
+        #     if forbidden_mask.dim() == 1:
+        #         # Expand a single environment mask to match batch size
+        #         forbidden_mask = forbidden_mask.unsqueeze(0).expand(batch_size, -1)
+        #     elif forbidden_mask.dim() == 3:
+        #         # Clean up dimensions from replay buffer (e.g., [batch, 1, seq_len])
+        #         forbidden_mask = forbidden_mask.squeeze(1)
+
+        #     # Apply the mask: -1e9 means 0.0% probability of being chosen
+        #     masked_logits = masked_logits.masked_fill(forbidden_mask, -1e9)
+
+        # return masked_logits
+
         batch_size = logits.size(0)
         device = logits.device
 
-        # --- MASK 1: PADDING TOKENS ---
-        # Prevent modifying any indices beyond the real packet length
-        seq_indices = (
-            torch.arange(self.seq_len, device=device)
-            .unsqueeze(0)
-            .expand(batch_size, -1)
-        )
-        real_len_broadcast = real_length.view(-1, 1)
-        action_mask = seq_indices < real_len_broadcast
-        masked_logits = logits.masked_fill(~action_mask, -1e9)
-
-        # --- MASK 2: ALREADY MODIFIED / FORBIDDEN TOKENS ---
-        if "forbidden_indices" in state:
-            forbidden_mask = state["forbidden_indices"].bool()
-
-            if forbidden_mask.dim() == 1:
-                # Expand a single environment mask to match batch size
-                forbidden_mask = forbidden_mask.unsqueeze(0).expand(batch_size, -1)
-            elif forbidden_mask.dim() == 3:
-                # Clean up dimensions from replay buffer (e.g., [batch, 1, seq_len])
-                forbidden_mask = forbidden_mask.squeeze(1)
-
-            # Apply the mask: -1e9 means 0.0% probability of being chosen
-            masked_logits = masked_logits.masked_fill(forbidden_mask, -1e9)
+        if "legal_action_mask" in state:
+            legal_mask = state["legal_action_mask"].bool()
+            if legal_mask.dim() == 1:
+                legal_mask = legal_mask.unsqueeze(0).expand(batch_size, -1)
+            elif legal_mask.dim() == 3:
+                legal_mask = legal_mask.squeeze(1)
+            masked_logits = logits.masked_fill(~legal_mask, -1e9)
+        else:
+            pos_indices = (
+                torch.arange(self.seq_len, device=device)
+                .unsqueeze(0)
+                .expand(batch_size, -1)
+            )
+            real_len_broadcast = real_length.view(-1, 1)
+            valid_pos = (pos_indices >= 1) & (pos_indices < real_len_broadcast)
+            if "forbidden_indices" in state:
+                forbidden_mask = state["forbidden_indices"].bool()
+                if forbidden_mask.dim() == 1:
+                    forbidden_mask = forbidden_mask.unsqueeze(0).expand(batch_size, -1)
+                elif forbidden_mask.dim() == 3:
+                    forbidden_mask = forbidden_mask.squeeze(1)
+                valid_pos = valid_pos & (~forbidden_mask)
+            action_mask = valid_pos.repeat_interleave(2, dim=1)
+            masked_logits = logits.masked_fill(~action_mask, -1e9)
 
         return masked_logits
 
@@ -112,7 +142,7 @@ class MambaCriticNet(nn.Module):
         self.ipd_embedding = nn.Embedding(timevocab_size, embedding_dim)
         self.size_embedding = nn.Embedding(sizevocab_size, embedding_dim)
         self.mamba = Mamba(d_model=embedding_dim * 2, d_state=32, d_conv=4, expand=2)
-        self.fc = nn.Linear(embedding_dim * 2 * seq_len, seq_len)
+        self.fc = nn.Linear(embedding_dim * 2 * seq_len, seq_len * 2)
 
     def forward(self, state: Dict[str, torch.Tensor]) -> torch.Tensor:
         safe_ipd = torch.clamp(
